@@ -50,10 +50,10 @@ CFLAGS += -I$(ODP_PATH)/librte_anssock/include
 LDLIBS += $(ODP_PATH)/librte_anssock/librte_anssock.a 
 
 # binary name
-APP = dpdk_tcp_client
+APP = dpdk_tcp_client1
 
 # all source are stored in SRCS-y
-SRCS-y := dpdk_tcp_client.c 
+SRCS-y := dpdk_tcp_client1.c 
 
 CFLAGS += -O3
 #CFLAGS += $(WERROR_FLAGS)

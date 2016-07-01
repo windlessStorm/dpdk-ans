@@ -56,6 +56,14 @@
 
 #define TCP_CLIENT_SEND_LEN 2000
 
+
+struct thread_info {    /* Used as argument to thread_start() */
+          pthread_t thread_id;        /* ID returned by pthread_create() */
+           int       thread_num;       /* Application-defined thread # */
+           //char     *argv_string;      /* From command-line argument */
+       };
+
+
 struct epoll_event events[10];
 
 void tcp_send_thread(int fd)  
@@ -84,10 +92,9 @@ void tcp_send_thread(int fd)
     
 }
 
-int client_thread()
+static int client_thread(void *arg )
 {
-	
-	int ret;
+    int ret;
     int i = 0 ;
     int epfd;
     int data_num =0;
@@ -98,6 +105,13 @@ int client_thread()
     int recv_len; 
     pthread_t id;
     int fd;
+    struct thread_info *tinfo = arg;
+
+
+
+    printf("Client %d: Started!  \n",
+                   tinfo->thread_num);
+
     fd = anssock_socket(AF_INET, SOCK_STREAM, 0);	
  
     if(fd < 0)
@@ -106,7 +120,7 @@ int client_thread()
         anssock_close(epfd);
         return -1;
     }
-
+	
     memset(&remote_addr, 0, sizeof(remote_addr));      
     remote_addr.sin_family = AF_INET;  
     remote_addr.sin_port   = htons(8000);  
@@ -210,13 +224,15 @@ int client_thread()
 
 
 
-int main(void)
+int main(int argc, char *argv[])
 {
-    int ret;
+    int ret, num_threads = 10, tnum =0;
     int i = 0 ;
     int epfd;
     struct epoll_event event;
-    pthread_t id;  
+    //pthread_t id;  
+    struct thread_info *tinfo;
+
 
     ret = anssock_init(NULL);
     if(ret != 0)
@@ -229,11 +245,23 @@ int main(void)
         printf("create epoll socket failed \n");
         return -1;
     }
-	int concurent = 3;
-	while(concurent--)
-	{
-		ret=pthread_create(&id, NULL, (void *) client_thread, NULL);  
-		
-    	}
+          
+    tinfo = calloc(num_threads, sizeof(struct thread_info));
+         if (tinfo == NULL)
+             printf("calloc");
+
+    for (tnum = 0; tnum < num_threads; tnum++) {
+               tinfo[tnum].thread_num = tnum + 1;
+
+               /* The pthread_create() call stores the thread ID into
+                  corresponding element of tinfo[] */
+
+               ret = pthread_create(&tinfo[tnum].thread_id, NULL,
+                                  (void*)&client_thread, (void*)&tinfo[tnum]);
+               if (ret != 0)
+                   printf("client %d  creation failed!!  \n", tinfo[tnum].thread_num);
+           }
+
+
 	return 0;
 }
