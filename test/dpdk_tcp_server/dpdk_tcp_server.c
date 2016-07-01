@@ -138,7 +138,7 @@ int main(int argc, char * argv[])
     
     memset(&my_addr,0,sizeof(my_addr)); 
     my_addr.sin_family=AF_INET; 
-    my_addr.sin_addr.s_addr=INADDR_ANY;   
+    my_addr.sin_addr.s_addr=htonl(0x0A000003);
     my_addr.sin_port=htons(8000);    
   
     if((server_sockfd=anssock_socket(PF_INET,SOCK_STREAM, 0)) < 0)     
