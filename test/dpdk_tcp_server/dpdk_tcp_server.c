@@ -66,21 +66,21 @@
 #define BUFFER_SIZE 5000  
 #define MAX_EVENTS 10  
 
+
+
 int dpdk_handle_event(struct epoll_event ev)
 {
     char recv_buf[BUFFER_SIZE];       
     int len; 
-    int send_len = 0;
-    char send_buf[BUFFER_SIZE];       
+  //  int send_len = 0;
+//    char send_buf[BUFFER_SIZE];       
 
     if (ev.events&EPOLLIN)
     {
-
-        while(1)
-        {
             len = anssock_recvfrom(ev.data.fd, recv_buf, BUFFER_SIZE, 0, NULL, NULL);
             if(len > 0)  
             {  
+		/*
                 sprintf(send_buf, "I have received your message.");
                 
                 send_len = anssock_send(ev.data.fd, send_buf, 2500, 0);  
@@ -88,32 +88,16 @@ int dpdk_handle_event(struct epoll_event ev)
                 {
                     printf("send data failed, send_len %d \n", send_len);
                 }
-
+		*/
                 printf("receive from client(%d) , data len:%d \n", ev.data.fd, len);  
             } 
-            else if(len < 0)
-            {
-                if (errno == ANS_EAGAIN)   
-                {
-                    break;
-                }
-                else
-                {
-                    printf("remote close the socket, errno %d \n", errno);
-                    anssock_close(ev.data.fd);
-                    break;
-                }
-            }
-            else
-            {
-                printf("remote close the socket, len %d \n", len);
-                anssock_close(ev.data.fd);
-                break;
-            }
+      
+         
+            //anssock_close(ev.data.fd);
+        
 
-        }
+        
     }
-    
     if (ev.events&EPOLLERR || ev.events&EPOLLHUP) 
     {
         printf("remote close the socket, event %x \n", ev.events);
@@ -123,7 +107,11 @@ int dpdk_handle_event(struct epoll_event ev)
     return 0;
 }
 
-int main(int argc, char * argv[])     
+
+
+
+
+int main(int argc, char * argv[])    
 { 
     int ret;
     int server_sockfd;   
@@ -131,6 +119,7 @@ int main(int argc, char * argv[])
     struct sockaddr_in my_addr;      
     struct sockaddr_in remote_addr;     
     int sin_size;     
+    int connections=0;
 
     ret = anssock_init(NULL);
     if(ret != 0)
@@ -187,7 +176,7 @@ int main(int argc, char * argv[])
 
     printf("dpdk tcp server is running \n");
     
-    while(1)  
+    while(1)  	
     {  
         nfds=anssock_epoll_wait(epoll_fd, events, MAX_EVENTS, -1);  
         if(nfds==-1)  
@@ -228,8 +217,10 @@ int main(int argc, char * argv[])
                 
                
                 printf("accept client %s,  family: %d, port %d \n",inet_ntoa(remote_addr.sin_addr), remote_addr.sin_family, remote_addr.sin_port);  
-                
-                anssock_send(client_sockfd, "I have received your message.", 20, 0);  
+		
+		connections++;                
+
+               // anssock_send(client_sockfd, "I have received your message.", 20, 0);  
 
             }  
             else  
@@ -238,5 +229,6 @@ int main(int argc, char * argv[])
             }  
         }  
     }  
+    printf("Total connections made = %d ", connections);
     return 0;     
 }    
